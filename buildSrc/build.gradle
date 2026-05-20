@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-rootProject.name = 'groovy6-functional'
+plugins {
+    id 'groovy-gradle-plugin'
+}
 
-include 'monoids',
-        'purity',
-        'monadic',
-        'nullability',
-        'immutability',
-        'recursion',
-        'contrast',
-        'pbt'
+repositories {
+    mavenCentral()
+}

@@ -1,7 +1,23 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import fj.F
 import fj.data.List as FJList
 import fj.data.Option
 import fj.data.Validation
+import groovy.transform.Field
 import groovy.transform.TypeChecked
 import static org.apache.groovy.macrolib.MacroLibGroovyMethods.DO
 
@@ -11,6 +27,7 @@ import static org.apache.groovy.macrolib.MacroLibGroovyMethods.DO
 // without a Groovy dependency on FunctionalJava.
 
 // 1. FJ style — explicit binds via fj.F
+@Field
 F<Integer, Option<Integer>> halveIfEven = i -> i % 2 == 0 ? Option.some(i / 2 as int) : Option.none()
 Option<Integer> result = Option.some(20).bind(halveIfEven).bind(halveIfEven)
 assert result == Option.some(5)
@@ -36,8 +53,8 @@ Validation<String, Integer> addPositives(int x, int y) {
         Validation.success(a + b)
     }
 }
-assert addPositives(2, 3).successE() == 5
-assert addPositives(-1, 3).failE()   == 'non-positive: -1'
+assert addPositives(2, 3).success() == 5
+assert addPositives(-1, 3).fail()   == 'non-positive: -1'
 
 // 4. The argument for new code:
 // Where FunctionalJava forces you to inherit fj.* types (or wrap),

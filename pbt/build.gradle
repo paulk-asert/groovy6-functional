@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-rootProject.name = 'groovy6-functional'
+plugins {
+    id 'groovy-setup'
+}
 
-include 'monoids',
-        'purity',
-        'monadic',
-        'nullability',
-        'immutability',
-        'recursion',
-        'contrast',
-        'pbt'
+dependencies {
+    testImplementation project(':monoids')
+    testImplementation "net.jqwik:jqwik:$jqwikVersion"
+    testImplementation "org.apache.groovy:groovy-test-junit6:$groovyVersion"
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform { includeEngines 'jqwik' }
+}

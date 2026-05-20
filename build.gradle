@@ -1,51 +1,48 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Examples accompanying the blog post
 // "Groovy 6 features for Functional Programmers"
 //
 // Targets Groovy 6.0 (currently in alpha).
 // Override the version on the CLI:
 //   ./gradlew -PgroovyVersion=6.0.0-alpha-3 build
+plugins {
+    id 'com.github.ben-manes.versions' version '0.54.0'
+    id 'org.nosphere.apache.rat' version '0.8.1'
+}
 
 ext {
-    groovyVersion = project.findProperty('groovyVersion') ?: '6.0.0-alpha-3'
-    spockVersion  = '2.4-M6-groovy-4.0'   // adequate for the @Reducer/PBT demos
-    jqwikVersion  = '1.9.0'
+//    groovyVersion = project.findProperty('groovyVersion') ?: '6.0.0-alpha-1'
+    groovyVersion = '6.0.0-SNAPSHOT'
+    spockVersion  = '2.4-groovy-5.0'   // adequate for the @Reducer/PBT demos
+    jqwikVersion  = '1.9.3'
 }
 
-allprojects {
-    apply plugin: 'groovy'
+repositories {
+    mavenCentral()
+}
 
-    repositories {
-        mavenCentral()
-        maven { url 'https://repository.apache.org/content/repositories/snapshots' }
-    }
-
-    dependencies {
-        implementation "org.apache.groovy:groovy:$groovyVersion"
-        implementation "org.apache.groovy:groovy-contracts:$groovyVersion"
-        implementation "org.apache.groovy:groovy-typecheckers:$groovyVersion"
-        implementation "org.apache.groovy:groovy-macro-library:$groovyVersion"
-    }
-
-    tasks.withType(GroovyCompile).configureEach {
-        groovyOptions.parameters = true
+tasks.register('check') {
+    dependsOn 'rat'
+    subprojects { p ->
+        it.dependsOn(p.check)
     }
 }
 
-project(':contrast') {
-    dependencies {
-        implementation 'org.functionaljava:functionaljava:5.0'
-        implementation 'org.functionaljava:functionaljava-java8:5.0'
-        implementation 'org.highj:highj:0.5.0'
-    }
-}
-
-project(':pbt') {
-    dependencies {
-        testImplementation project(':monoids')
-        testImplementation "net.jqwik:jqwik:$jqwikVersion"
-        testImplementation "org.apache.groovy:groovy-test-junit6:$groovyVersion"
-    }
-    tasks.withType(Test).configureEach {
-        useJUnitPlatform { includeEngines 'jqwik' }
-    }
+tasks.named('rat') {
+    excludes = ['**/build/**', '.idea', 'gradle/wrapper', '**/.gradle', '**/*.log', '**/lib/**']
 }

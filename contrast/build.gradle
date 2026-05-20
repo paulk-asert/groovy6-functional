@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-rootProject.name = 'groovy6-functional'
+plugins {
+    id 'groovy-setup'
+}
 
-include 'monoids',
-        'purity',
-        'monadic',
-        'nullability',
-        'immutability',
-        'recursion',
-        'contrast',
-        'pbt'
+dependencies {
+    implementation 'org.functionaljava:functionaljava:5.0'
+    implementation files('lib/highj-0.7-java8-SNAPSHOT.jar', 'lib/hkt-0.9.2.jar')
+}

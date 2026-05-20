@@ -1,3 +1,18 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import groovy.contracts.Ensures
 import groovy.contracts.Modifies
 import groovy.contracts.Requires
@@ -8,21 +23,20 @@ import groovy.transform.TypeChecked
 // the type system so the compiler tracks "this method may do I/O".
 // Groovy 6 takes a different route — same outcome, no wrapping.
 //
-//   @Pure           method has no observable effect
-//   @Modifies({…})  method's effects are exactly these fields
-//   @Pure(allows=LOGGING) graded effects, à la cats-effect IO with
-//                          a small effect lattice
+//   @Pure                                        method has no observable effect
+//   @Modifies({…})                               method's effects are exactly these fields
+//   PurityChecker(allows: "LOGGING|METRICS|…")   graded effects, à la cats-effect IO,
+//                                                configured on the checker extension
 //
 // PurityChecker and ModifiesChecker turn the declarations into
 // compile-time guarantees rather than honour-system comments.
 
-@TypeChecked(extensions = ['groovy.typecheckers.PurityChecker',
-                           'groovy.typecheckers.ModifiesChecker'])
 class Calculator {
     BigDecimal total = 0
     List<String> ledger = []
 
     @Pure
+    @TypeChecked(extensions = 'groovy.typecheckers.PurityChecker')
     static BigDecimal vat(BigDecimal net, BigDecimal rate) {
         net * (1 + rate)            // no side effect — verified
     }
@@ -30,14 +44,16 @@ class Calculator {
     @Requires({ amount > 0 })
     @Ensures({ total == old.total + amount })
     @Modifies({ [this.total, this.ledger] })
+    @TypeChecked(extensions = 'groovy.typecheckers.ModifiesChecker')
     void post(BigDecimal amount) {
         total += amount
         ledger << "+$amount"        // any other field write would be rejected
     }
 
-    @Pure(allows = groovy.transform.Pure.Effect.LOGGING)
+    @Pure
+    @TypeChecked(extensions = 'groovy.typecheckers.PurityChecker(allows: "LOGGING")')
     BigDecimal balance() {
-        log.fine "balance read"     // logging is the only effect permitted
+        log.fine "balance read"     // logging tolerated via this method's allows option
         total
     }
 
