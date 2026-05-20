@@ -1,0 +1,10 @@
+rootProject.name = 'groovy6-functional'
+
+include 'monoids',
+        'purity',
+        'monadic',
+        'nullability',
+        'immutability',
+        'recursion',
+        'contrast',
+        'pbt'

@@ -1,0 +1,51 @@
+// Examples accompanying the blog post
+// "Groovy 6 features for Functional Programmers"
+//
+// Targets Groovy 6.0 (currently in alpha).
+// Override the version on the CLI:
+//   ./gradlew -PgroovyVersion=6.0.0-alpha-3 build
+
+ext {
+    groovyVersion = project.findProperty('groovyVersion') ?: '6.0.0-alpha-3'
+    spockVersion  = '2.4-M6-groovy-4.0'   // adequate for the @Reducer/PBT demos
+    jqwikVersion  = '1.9.0'
+}
+
+allprojects {
+    apply plugin: 'groovy'
+
+    repositories {
+        mavenCentral()
+        maven { url 'https://repository.apache.org/content/repositories/snapshots' }
+    }
+
+    dependencies {
+        implementation "org.apache.groovy:groovy:$groovyVersion"
+        implementation "org.apache.groovy:groovy-contracts:$groovyVersion"
+        implementation "org.apache.groovy:groovy-typecheckers:$groovyVersion"
+        implementation "org.apache.groovy:groovy-macro-library:$groovyVersion"
+    }
+
+    tasks.withType(GroovyCompile).configureEach {
+        groovyOptions.parameters = true
+    }
+}
+
+project(':contrast') {
+    dependencies {
+        implementation 'org.functionaljava:functionaljava:5.0'
+        implementation 'org.functionaljava:functionaljava-java8:5.0'
+        implementation 'org.highj:highj:0.5.0'
+    }
+}
+
+project(':pbt') {
+    dependencies {
+        testImplementation project(':monoids')
+        testImplementation "net.jqwik:jqwik:$jqwikVersion"
+        testImplementation "org.apache.groovy:groovy-test-junit6:$groovyVersion"
+    }
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform { includeEngines 'jqwik' }
+    }
+}
