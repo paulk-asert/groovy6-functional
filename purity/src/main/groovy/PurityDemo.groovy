@@ -47,7 +47,7 @@ class Calculator {
     @TypeChecked(extensions = 'groovy.typecheckers.ModifiesChecker')
     void post(BigDecimal amount) {
         total += amount
-        ledger << "+$amount"        // any other field write would be rejected
+        ledger << "+$amount".toString()   // any other field write would be rejected
     }
 
     @Pure
