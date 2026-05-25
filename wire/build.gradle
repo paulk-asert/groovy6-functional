@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-rootProject.name = 'groovy6-functional'
+// The wire library: a small, user-built example showing the
+// annotation + builder + runtime + renderer pattern from the
+// "Building your own checked DSL" section of the blog post.
+//
+// Library only — no executable scripts in src/main.
+// Consumers (e.g. :wire-demo) depend on this project.
 
-include 'monoids',
-        'purity',
-        'monadic',
-        'nullability',
-        'immutability',
-        'recursion',
-        'contrast',
-        'pbt',
-        'wire',
-        'wire-demo'
+plugins {
+    id 'groovy-setup'
+}

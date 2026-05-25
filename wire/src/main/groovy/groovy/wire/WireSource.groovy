@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package groovy.wire
 
-rootProject.name = 'groovy6-functional'
+import java.lang.annotation.ElementType
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
+import java.lang.annotation.Target
 
-include 'monoids',
-        'purity',
-        'monadic',
-        'nullability',
-        'immutability',
-        'recursion',
-        'contrast',
-        'pbt',
-        'wire',
-        'wire-demo'
+// Marker for a class that contributes @Wirable primitives.
+// Not required for use, but useful for tooling (registry scans, doc
+// generation) that wants to enumerate available primitives by class.
+@Retention(RetentionPolicy.RUNTIME)
+@Target([ElementType.TYPE])
+@interface WireSource {
+    String description() default ''
+}

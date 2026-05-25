@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-rootProject.name = 'groovy6-functional'
+// Application of the wire library: ports the WireCat "word count"
+// example, builds the graph, runs it, and emits the PlantUML.
+//
+// The primitives sit under src/main/groovy/domain/ so the
+// `groovy-setup` convention plugin does not auto-register them as
+// runnable scripts (only WordCount.groovy is intended as an entry
+// point).
 
-include 'monoids',
-        'purity',
-        'monadic',
-        'nullability',
-        'immutability',
-        'recursion',
-        'contrast',
-        'pbt',
-        'wire',
-        'wire-demo'
+plugins {
+    id 'groovy-setup'
+}
+
+dependencies {
+    implementation project(':wire')
+}

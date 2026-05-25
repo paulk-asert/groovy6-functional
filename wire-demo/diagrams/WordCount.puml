@@ -1,0 +1,25 @@
+@startuml WordCount
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam component {
+  BackgroundColor #FAFAFA
+  BorderColor #777777
+}
+
+component "readPath" as readPath
+component "loadText" as loadText
+component "countWords" as countWords
+component "countLines" as countLines
+component "countChars" as countChars
+component "writeReport" as writeReport
+
+readPath --> loadText : path
+loadText --> countWords : text
+loadText --> countLines : text
+loadText --> countChars : text
+readPath --> writeReport : path
+countWords --> writeReport : words
+countLines --> writeReport : lines
+countChars --> writeReport : chars
+@enduml

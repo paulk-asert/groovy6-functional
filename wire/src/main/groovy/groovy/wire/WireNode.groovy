@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package groovy.wire
 
-rootProject.name = 'groovy6-functional'
+import groovy.transform.CompileStatic
+import groovy.transform.ToString
 
-include 'monoids',
-        'purity',
-        'monadic',
-        'nullability',
-        'immutability',
-        'recursion',
-        'contrast',
-        'pbt',
-        'wire',
-        'wire-demo'
+// One step in a WireGraph. Carries everything needed to execute the
+// primitive and to render it as a node in the wire diagram.
+@ToString(includeNames = true, includes = 'name,inputs,outputs')
+@CompileStatic
+class WireNode {
+    String       name
+    List<String> inputs
+    List<String> outputs
+    Closure<?>   invoker
+}
