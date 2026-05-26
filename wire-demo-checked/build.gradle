@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package groovy.wire
 
-import groovy.transform.CompileStatic
-import groovy.transform.ToString
+// Consumer of :wire + :wire-checker. Reuses the @Wirable primitives
+// from :wire-demo to demonstrate that the same producer-side code
+// works against either the runtime check (:wire-demo) or the
+// compile-time check (here).
 
-// One task in a WireGraph. Carries everything needed to execute the
-// primitive and to render it as a node in the wire diagram.
-@ToString(includeNames = true, includes = 'name,inputs,outputs')
-@CompileStatic
-class WireNode {
-    String       name
-    List<String> inputs
-    List<String> outputs
-    Closure<?>   invoker
+plugins {
+    id 'groovy-setup'
+}
+
+dependencies {
+    implementation project(':wire')
+    implementation project(':wire-checker')
+    implementation project(':wire-demo')
 }

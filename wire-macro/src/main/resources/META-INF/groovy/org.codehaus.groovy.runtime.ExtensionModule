@@ -1,0 +1,4 @@
+moduleName=wire-macro
+moduleVersion=1.0
+extensionClasses=groovy.wire.macro.WireMacroMethods
+staticExtensionClasses=

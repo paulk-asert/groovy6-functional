@@ -18,22 +18,23 @@ package groovy.wire
 import java.lang.reflect.Method
 import org.codehaus.groovy.runtime.MethodClosure
 
-// Builds a WireGraph from a sequence of method references to @Wirable
-// methods.
+// Captures a sequence of @Wirable primitives into a WireGraph.
 //
-// Each step:
-//   * reads @Wirable.inputs/outputs (or infers them from the method
-//     signature when not given explicitly);
-//   * verifies that every required input has been produced by some
-//     earlier step OR is declared as a graph-level input;
-//   * captures a closure that, at run time, marshals env -> args,
-//     invokes the primitive, and returns the result for unpacking.
+// Each `task` call:
+//   * reads @Wirable.inputs/outputs from the primitive's annotation;
+//   * sanity-checks that every required input is either a declared
+//     graph-level input or contributed by some earlier task — caught
+//     at build time, the runtime-deferred form of what WireChecker
+//     does at compile time;
+//   * captures an invoker that, at run() time, marshals env -> args
+//     and calls the primitive synchronously inside an async task.
 //
-// The build-time check is the fail-fast equivalent of what a
-// `WireChecker` type-checking extension would do at compile time:
-// same producer/consumer split, same contract, just at a different
-// phase. Both can coexist (compile-time for static feedback in IDE,
-// build-time for the dynamic-DSL form shown here).
+// `task` is the wire builder's graph-node verb. Each call is
+// scheduled internally via Groovy 6's `async { … }` and
+// `groovy.concurrent.DataflowVariable`, so independent tasks run
+// concurrently on the JDK's virtual-thread executor. Execution
+// order is data-driven (dependencies on @Wirable.inputs/outputs),
+// not textual; declaration order is a hint, not a contract.
 class WireBuilder {
 
     private final String graphName
@@ -47,33 +48,45 @@ class WireBuilder {
         this.available.addAll(declaredInputs)
     }
 
-    // Add a primitive to the graph. Returns void; the wiring is
-    // implicit from @Wirable inputs/outputs on the method.
-    void step(MethodClosure ref) {
+    // Add a primitive to the graph. The wiring is implicit from
+    // @Wirable inputs/outputs on the method.
+    void task(MethodClosure ref) {
         Method m = findMethod(ref)
         Wirable w = m.getAnnotation(Wirable)
         if (w == null) {
             throw new IllegalStateException(
-                "step ${ref.method}: not annotated @Wirable")
+                "task ${ref.method}: not annotated @Wirable")
         }
         String label = w.name() ?: m.name
         List<String> inputs  = w.inputs()  as List<String>
         List<String> outputs = w.outputs() as List<String>
+        addTaskNode(label, inputs, outputs, ref.owner, m)
+    }
 
+    // Explicit form used by the WIRE macro, which derives the wiring
+    // from source-level bindings (LHS of `name = call(args)`) rather
+    // than from the primitive's @Wirable declarations. Both forms
+    // produce identical WireNodes.
+    void task(String outputName, MethodClosure ref, List<String> inputs) {
+        Method m = findMethod(ref)
+        String label = m.name
+        List<String> outputs = outputName ? [outputName] : []
+        addTaskNode(label, inputs, outputs, ref.owner, m)
+    }
+
+    private void addTaskNode(String label, List<String> inputs, List<String> outputs,
+                             Object owner, Method m) {
         for (String field : inputs) {
             if (!available.contains(field)) {
                 throw new IllegalStateException(
-                    "wire '$graphName': step '$label' needs field '$field' " +
+                    "wire '$graphName': task '$label' needs field '$field' " +
                     "but only ${available} are available so far " +
                     "(declared graph inputs: ${declaredInputs})")
             }
         }
-
-        Object owner = ref.owner
         Closure<?> invoker = { Map<String, Object> args ->
             invokePrimitive(m, owner, args)
         }
-
         nodes << new WireNode(
             name:    label,
             inputs:  inputs,
@@ -84,7 +97,7 @@ class WireBuilder {
     }
 
     WireGraph build() {
-        new WireGraph(name: graphName, nodes: nodes)
+        new WireGraph(name: graphName, nodes: nodes, declaredInputs: declaredInputs)
     }
 
     // --- internals ---
@@ -116,7 +129,6 @@ class WireBuilder {
         Class<?> clazz = (ref.owner instanceof Class) ? (Class) ref.owner : ref.owner.getClass()
         def candidates = clazz.methods.findAll { it.name == target }
         if (candidates.size() == 1) return candidates[0]
-        // pick the one carrying @Wirable, ties broken by parameter count
         def annotated = candidates.findAll { it.isAnnotationPresent(Wirable) }
         if (annotated.size() == 1) return annotated[0]
         throw new IllegalStateException(

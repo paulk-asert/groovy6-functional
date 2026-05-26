@@ -28,12 +28,12 @@ import groovy.wire.Wire
 // extension would lift to compile-time guarantees here.
 
 def wc = Wire.wire('WordCount') {
-    step WordCountPrimitives::readPath
-    step WordCountPrimitives::loadText
-    step WordCountPrimitives::countWords
-    step WordCountPrimitives::countLines
-    step WordCountPrimitives::countChars
-    step WordCountPrimitives::writeReport
+    task WordCountPrimitives::readPath
+    task WordCountPrimitives::loadText
+    task WordCountPrimitives::countWords
+    task WordCountPrimitives::countLines
+    task WordCountPrimitives::countChars
+    task WordCountPrimitives::writeReport
 }
 
 // Emit the PlantUML alongside the source so the blog post can include

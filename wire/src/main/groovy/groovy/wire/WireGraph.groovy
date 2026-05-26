@@ -15,62 +15,88 @@
  */
 package groovy.wire
 
-import groovy.transform.CompileStatic
+import groovy.concurrent.DataflowVariable
 
-// A captured cartesian-style composition of @Wirable primitives.
+import static org.apache.groovy.runtime.async.AsyncSupport.async
+import static org.apache.groovy.runtime.async.AsyncSupport.await
+
+// A captured composition of @Wirable primitives.
 //
-//   .run(env)       executes the steps in declared order, threading a
-//                   Map<String,Object> environment through them; each
-//                   primitive consumes the fields named in its @Wirable
-//                   inputs and contributes its outputs back.
-//   .toPlantUml()   emits the structural form of the graph as PlantUML.
-//                   The two views are derived from one definition — the
-//                   same property WireCat preserves by forbidding `arr`.
-@CompileStatic
+//   .run(env)       schedules each task on the async executor, with
+//                   inter-task dependencies expressed as
+//                   DataflowVariables keyed on field name.
+//                   Independent tasks run concurrently — the data
+//                   dependency declared by @Wirable.inputs/outputs is
+//                   what gates execution, not textual order.
+//   .toPlantUml()   emits the structural form of the graph as
+//                   PlantUML. Same value, different interpretation —
+//                   the property WireCat preserves by forbidding
+//                   `arr`.
 class WireGraph {
     String         name
     List<WireNode> nodes
+    List<String>   declaredInputs = []
 
     Map<String, Object> run(Map<String, Object> input = [:]) {
-        Map<String, Object> env = [:]
-        env.putAll(input)
+        // One DataflowVariable per field — graph-level inputs preseeded
+        // from the supplied env, task outputs filled in by the
+        // scheduled tasks as they complete.
+        Map<String, DataflowVariable> bindings = [:]
+        for (String field : declaredInputs) {
+            def v = new DataflowVariable()
+            if (input.containsKey(field)) v << input[field]
+            bindings[field] = v
+        }
         for (WireNode node : nodes) {
-            Map<String, Object> args = [:]
-            for (String field : node.inputs) {
-                if (!env.containsKey(field)) {
-                    throw new IllegalStateException(
-                        "wire '$name': step '$node.name' needs field '$field' " +
-                        "but env only has ${env.keySet()}")
-                }
-                args[field] = env[field]
-            }
-            def result = node.invoker.call(args)
-            if (result == null) {
-                continue
-            }
-            if (result instanceof Map) {
-                env.putAll((Map<String, Object>) result)
-                continue
-            }
-            // record-like: respond to .toMap()
-            try {
-                def m = result.invokeMethod('toMap', null as Object[])
-                if (m instanceof Map) {
-                    env.putAll((Map<String, Object>) m)
-                    continue
-                }
-            } catch (ignored) {
-                // fall through
-            }
-            // single-output convenience
-            if (node.outputs.size() == 1) {
-                env.put(node.outputs[0], result)
+            for (String field : node.outputs) {
+                bindings.computeIfAbsent(field) { new DataflowVariable() }
             }
         }
+
+        // Schedule one async task per node. Each blocks on its declared
+        // inputs (awaiting their DataflowVariables), runs the primitive,
+        // and binds its declared outputs.
+        // Note: nodes.each gives a fresh closure-captured variable per
+        // iteration; a plain for-loop here would alias the loop variable
+        // into all async closures.
+        def tasks = []
+        nodes.each { WireNode n ->
+            tasks << async { ->
+                Map<String, Object> args = [:]
+                n.inputs.each { String field ->
+                    args[field] = await(bindings[field])
+                }
+                def result = n.invoker.call(args)
+                Map<String, Object> produced = unpack(result, n.outputs)
+                n.outputs.each { String field ->
+                    bindings[field] << (produced.containsKey(field) ? produced[field] : null)
+                }
+                null
+            }
+        }
+
+        // Await every scheduled task so run() is synchronous to its
+        // caller. Surface any failure raised by a task.
+        tasks.each { await(it) }
+
+        // Materialise the env from all fulfilled bindings.
+        Map<String, Object> env = [:]
+        bindings.each { String k, DataflowVariable v -> env[k] = v.get() }
         env
     }
 
     String toPlantUml() {
         PlantUmlRenderer.render(this)
+    }
+
+    private static Map<String, Object> unpack(Object result, List<String> outputs) {
+        if (result == null) return [:]
+        if (result instanceof Map) return (Map<String, Object>) result
+        try {
+            def m = result.invokeMethod('toMap', null as Object[])
+            if (m instanceof Map) return (Map<String, Object>) m
+        } catch (ignored) { /* fall through */ }
+        if (outputs.size() == 1) return [(outputs[0]): result]
+        [:]
     }
 }

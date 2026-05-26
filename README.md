@@ -32,6 +32,12 @@ Each subproject is a small, single-topic example set:
 | `recursion`     | `@TailRecursive`, `@Decreases`, `@Invariant` on loops     |
 | `contrast`      | Side-by-side with FunctionalJava and highj                |
 | `pbt`           | Property-based tests derived from `@Associative`/`@Reducer` annotations |
+| `wire`          | User-built checked DSL: `@Wirable` annotations, builder, dataflow runtime, PlantUML renderer |
+| `wire-checker`  | `WireChecker` type-checking extension for the builder form |
+| `wire-macro`    | `WIRE { name << call(args) }` proc-notation macro that compiles to `async`/`Dataflows` code |
+| `wire-demo`     | Consumer demo using the `Wire.wire { task X::y }` builder |
+| `wire-demo-checked` | Same builder under `@TypeChecked(extensions = '…WireChecker.groovy')` |
+| `wire-demo-macro` | Consumer demo using the `WIRE` macro |
 
 The default Groovy version is `6.0.0-alpha-3`; override with
 `-PgroovyVersion=...` on the Gradle CLI.

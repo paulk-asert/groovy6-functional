@@ -1,0 +1,50 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// The WIRE compile-time macro: a Groovy @Macro method that rewrites
+//
+//   WIRE(UsingClass, 'name') {
+//       readPath()
+//       loadText(path)
+//       countWords(text)
+//       ...
+//   }
+//
+// into
+//
+//   Wire.wire('name') {
+//       task UsingClass::readPath
+//       task UsingClass::loadText
+//       task UsingClass::countWords
+//       ...
+//   }
+//
+// Each bare method call in the body becomes a `task ::method`
+// invocation; argument lists are kept in source for readability but
+// not consulted by the macro — the @Wirable annotations on the
+// primitives carry the real wiring, and WireChecker validates flow.
+//
+// Macros run at compile time, so this subproject must be compiled
+// before any consumer code. Hence its own subproject, depending only
+// on :wire (for the Wire entry point and the @Wirable annotation).
+
+plugins {
+    id 'groovy-setup'
+}
+
+dependencies {
+    implementation project(':wire')
+}

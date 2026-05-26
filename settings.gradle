@@ -25,4 +25,8 @@ include 'monoids',
         'contrast',
         'pbt',
         'wire',
-        'wire-demo'
+        'wire-demo',
+        'wire-checker',
+        'wire-demo-checked',
+        'wire-macro',
+        'wire-demo-macro'

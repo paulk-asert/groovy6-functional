@@ -50,11 +50,13 @@ class PlantUmlRenderer {
         }
         sb << '\n'
 
-        // Walk in order, tracking which step produced each field most recently.
-        // Fields read before any producer become external inputs.
+        // Walk in order, tracking which node produced each field most recently.
+        // Fields read before any producer become external inputs (declared
+        // once, then referenced by each consumer).
         Map<String, String> origin = [:]
         Set<String> producedAtAll = new LinkedHashSet<>()
         Set<String> consumed = new LinkedHashSet<>()
+        Set<String> externalInputsDeclared = new LinkedHashSet<>()
 
         for (WireNode n : g.nodes) {
             for (String field : n.inputs) {
@@ -62,7 +64,9 @@ class PlantUmlRenderer {
                 String src = origin.get(field)
                 if (src == null) {
                     String inId = "in_${safe(field)}"
-                    sb << "() \"${field}\" as ${inId}\n"
+                    if (externalInputsDeclared.add(field)) {
+                        sb << "() \"${field}\" as ${inId}\n"
+                    }
                     sb << "${inId} --> ${safe(n.name)}\n"
                 } else {
                     sb << "${safe(src)} --> ${safe(n.name)} : ${field}\n"

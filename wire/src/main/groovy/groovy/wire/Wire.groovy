@@ -15,28 +15,27 @@
  */
 package groovy.wire
 
-// User-facing entry point.
+// User-facing entry point for the builder form.
 //
 //   def g = Wire.wire('wordCount') {
-//       step Primitives::readPath
-//       step Primitives::loadText
-//       step Primitives::countWords
+//       task Primitives::readPath
+//       task Primitives::loadText
+//       task Primitives::countWords
 //       ...
 //   }
 //
 //   g.run(...)        // execute
 //   g.toPlantUml()    // render structure
 //
-// The closure delegates to a WireBuilder. Each `step ref` call adds a
+// The closure delegates to a WireBuilder. Each `task ref` call adds a
 // primitive; the builder verifies the data-flow contract on the fly
 // using the @Wirable annotations the primitive itself carries.
 //
-// A future macro form (`WIRE { readPath(); loadText(path); ... }`)
-// would desugar to the same builder calls but lift the primitive
-// invocations into the source language directly. The macro needs to
-// live in its own subproject so the AST transform is compiled before
-// the code that uses it; the builder API shown here works without
-// any compile-time machinery.
+// The WIRE macro in :wire-macro provides a proc-notation
+// (`WIRE { name << call(args) }`) that compiles to real async/Dataflows
+// code without needing @Wirable annotations on the primitives — see
+// :wire-demo-macro. The builder form here stays useful for constructing
+// graphs programmatically from data.
 class Wire {
 
     static WireGraph wire(String name,
