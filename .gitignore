@@ -23,6 +23,7 @@ testoutput/
 .settings/
 .classpath
 .project
+.claude/
 bin/
 work/
 .jqwik-database
