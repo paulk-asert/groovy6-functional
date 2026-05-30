@@ -29,4 +29,6 @@ include 'monoids',
         'wire-checker',
         'wire-demo-checked',
         'wire-macro',
-        'wire-demo-macro'
+        'wire-demo-macro',
+        'verification',
+        'verification-demo'
