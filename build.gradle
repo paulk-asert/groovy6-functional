@@ -44,5 +44,5 @@ tasks.register('check') {
 }
 
 tasks.named('rat') {
-    excludes = ['**/build/**', '.idea', 'gradle/wrapper', '**/.gradle', '**/*.log', '**/lib/**']
+    excludes = ['**/build/**', '.idea', '.claude', 'gradle/wrapper', '**/.gradle', '**/*.log', '**/lib/**']
 }
