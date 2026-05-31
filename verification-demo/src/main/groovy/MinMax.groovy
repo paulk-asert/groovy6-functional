@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 import groovy.transform.TypeChecked
-import verification.Ensures
+import groovy.contracts.Ensures
 
 /**
  * Postconditions (`@Ensures`) verified against the method body — the
- * checker now reasons about what a method *returns*, not just what its
+ * checker reasons about what a method *returns*, not just what its
  * callers pass in. Each method below compiles only because Z3 proves
  * the postcondition on every execution path of the body.
  *
  * Unlike the `@Requires` demos, the class carrying `@Ensures` is itself
  * `@TypeChecked(extensions = '…')`: a postcondition is checked where
  * the method is defined, not where it is called.
+ *
+ * These are stock `@groovy.contracts.Ensures` annotations, so groovy-contracts
+ * also generates a runtime postcondition check (including on the static
+ * methods here); the Z3 pass discharges the same contract at compile time.
  *
  * Run with:
  *   ../gradlew :verification-demo:run.MinMax

@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import verification.Requires
+import groovy.contracts.Requires
 
 /**
  * The classic Dafny example, ported to Groovy: an integer
  * square-root with a precondition that the input is non-negative.
  *
- * On its own, @Requires is just documentation. Under
+ * {@code @Requires(\{ x >= 0 \})} is a stock groovy-contracts precondition,
+ * so groovy-contracts generates the usual runtime check. Layered on top,
+ * compiling a caller under
  *   @TypeChecked(extensions = 'verification.VerifyChecker')
- * it becomes an enforced contract: every call site must PROVE that
- * x >= 0 holds — by literal value, by an enclosing condition, or by
- * facts visible to the checker's encoder. Z3 discharges the proof
- * obligation at the consumer's compile time.
+ * turns it into a statically enforced contract: every call site must
+ * PROVE that x >= 0 holds — by literal value, by an enclosing condition,
+ * or by facts visible to the checker's encoder — and Z3 discharges the
+ * proof obligation at the caller's compile time, before the runtime check
+ * would ever have a chance to fire.
  *
- * Note: the producer is intentionally NOT @CompileStatic. The
- * contract closure references the method's formals by name, and the
- * stock static type checker doesn't know to resolve those names
- * against the enclosing method's parameter list. The contract closure
- * is for the verifier, not the runtime, so plain Groovy here is the
- * expedient choice; the call-site checking still happens under the
- * consumer's @TypeChecked(extensions = '...VerifyChecker').
+ * The verifier needs the contract's source text, which the built-in
+ * annotation doesn't retain. {@code ContractExpansionTransform} captures it
+ * verbatim into a {@code @ContractSource} that survives into bytecode, so
+ * the proof works even when the caller lives in a different module.
  */
 class ISqrt {
     @Requires({ x >= 0 })

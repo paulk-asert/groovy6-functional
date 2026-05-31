@@ -19,7 +19,7 @@ plugins {
 }
 
 repositories {
-//    mavenLocal() // required until GROOVY-12021/GEP-23 is merged and you need to publish a Groovy version with that PR
+    mavenLocal() // patched local 6.0.0-SNAPSHOT (static @Ensures support) published here
     mavenCentral()
     maven { url 'https://repository.apache.org/content/repositories/snapshots' }
 }
